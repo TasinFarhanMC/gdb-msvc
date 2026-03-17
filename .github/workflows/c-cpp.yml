@@ -1,58 +1,52 @@
-name: CI
+name: Build cross-mingw-w64-gdb
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: 
 
 jobs:
   build:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Install radare2 dependencies
-        run: sudo apt install patch unzip git gcc make curl pkg-config xz-utils
+      - uses: actions/checkout@v3
 
-      - name: Checkout radare2
-        uses: actions/checkout@v2
+      - name: Install build dependencies
+        run: sudo apt update && sudo apt install -y \
+          git gcc g++ make patch curl xz-utils unzip libreadline-dev llvm-dev
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: radare2
-          repository: radareorg/radare2
-          ref: 5.0.0
+          create-symlink: true
 
-      - name: Build radare2
-        working-directory: radare2
+      - name: Create build and install directories
         run: |
-          sys/debian.sh
-          mv radare2_*_amd64.deb radare2_amd64.deb
-          mv radare2-dev_*_amd64.deb radare2-dev_amd64.deb
+          mkdir -p build
+          mkdir -p gdb-install
 
-      - name: Install radare2
-        working-directory: radare2
-        run: sudo apt install ./radare2*.deb
-
-      - name: Checkout gdb-msvc
-        uses: actions/checkout@v2
-
-      - name: Install dependencies
-        run: sudo apt install libreadline-dev llvm-dev
-
-      - name: Create build directory
-        run: mkdir build
-
-      - name: Configure
+      - name: Configure GDB
         working-directory: build
-        run: >-
-          ../configure
-          --prefix=/usr
-          --target=i686-w64-mingw32
-          --with-system-readline
-          --disable-nls
+        run: |
+          ./configure \
+            --prefix=${{ github.workspace }}/gdb-install \
+            --target=i686-w64-mingw32 \
+            --with-system-readline \
+            --disable-nls
 
-      - name: Build
+      - name: Build GDB
         working-directory: build
-        run: make
+        run: make -j$(nproc)
 
-      - name: Install
+      - name: Install to local prefix
         working-directory: build
-        run: sudo make install
+        run: make install
 
-      - name: Print version
-        run: i686-w64-mingw32-gdb --version
+      - name: Cache local GDB
+        uses: actions/cache@v3
+        with:
+          path: gdb-install
+          key: gdb-msvc-${{ runner.os }}-${{ hashFiles('**/configure') }}
