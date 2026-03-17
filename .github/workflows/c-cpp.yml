@@ -22,7 +22,7 @@ jobs:
       - name: Install radare2 manual deps
         run: |
           # Download all required .deb files
-          wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.1/libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
           wget http://archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone3_4.0.1+really+3.0.5-1build1_amd64.deb
           wget http://archive.ubuntu.com/ubuntu/pool/universe/libz/libzip/libzip5_1.5.1-0ubuntu1_amd64.deb
           wget http://archive.ubuntu.com/ubuntu/pool/universe/r/radare2/libradare2-common_4.2.1+dfsg-2_all.deb
@@ -30,7 +30,7 @@ jobs:
           wget http://archive.ubuntu.com/ubuntu/pool/universe/r/radare2/libradare2-dev_4.2.1+dfsg-2_amd64.deb
 
           # Install in correct order to satisfy dependencies
-          sudo apt install -y ./libssl1.1_1.1.1f-1ubuntu2.17_amd64.deb
+          sudo apt install -y ./libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
           sudo apt install -y ./libcapstone3_4.0.1+really+3.0.5-1build1_amd64.deb
           sudo apt install -y ./libzip5_1.5.1-0ubuntu1_amd64.deb
           sudo apt install -y ./libradare2-common_4.2.1+dfsg-2_all.deb
