@@ -9,16 +9,30 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Install build dependencies
-        run: sudo apt update && sudo apt install -y \
-          git gcc g++ make patch curl xz-utils unzip libreadline-dev llvm-dev
+        run: |
+          sudo apt update
+          sudo apt install -y git gcc g++ make patch curl xz-utils unzip libreadline-dev llvm-dev wget ccache
 
-      - name: ccache
+      - name: Install radare2 manual deps
+        run: |
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/r/radare2/libradare2-dev_4.2.1+dfsg-2_amd64.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/r/radare2/libradare2-4.2.1_4.2.1+dfsg-2_amd64.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/r/radare2/libradare2-common_4.2.1+dfsg-2_all.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/c/capstone/libcapstone3_4.0.1+really+3.0.5-1build1_amd64.deb
+          wget http://archive.ubuntu.com/ubuntu/pool/universe/libz/libzip/libzip5_1.5.1-0ubuntu1_amd64.deb
+          sudo apt install -y ./libzip5_1.5.1-0ubuntu1_amd64.deb \
+                               ./libcapstone3_4.0.1+really+3.0.5-1build1_amd64.deb \
+                               ./libradare2-common_4.2.1+dfsg-2_all.deb \
+                               ./libradare2-4.2.1_4.2.1+dfsg-2_amd64.deb \
+                               ./libradare2-dev_4.2.1+dfsg-2_amd64.deb
+
+      - name: ccache setup
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           create-symlink: true
@@ -31,7 +45,9 @@ jobs:
       - name: Configure GDB
         working-directory: build
         run: |
-          ./configure \
+          # Override LLVM CXXFLAGS to enable exceptions
+          export CXXFLAGS="$(llvm-config --cxxflags | sed 's/-fno-exceptions/-fexceptions/')"
+          ../configure \
             --prefix=${{ github.workspace }}/gdb-install \
             --target=i686-w64-mingw32 \
             --with-system-readline \
